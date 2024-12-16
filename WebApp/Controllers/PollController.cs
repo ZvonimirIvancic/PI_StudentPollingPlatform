@@ -127,21 +127,42 @@ namespace WebApp.Controllers
         // GET: PollController/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            try
+            {
+                var poll = _context.Polls.FirstOrDefault(x => x.Id == id);
+                var pollVM = new VMPoll
+                {
+                    Id = poll.Id,
+                    Title = poll.Title,
+                    Tekst = poll.Tekst,
+
+                };
+
+                return View(pollVM);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         // POST: PollController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public ActionResult Delete(int id, VMPoll poll)
         {
             try
             {
+                var dbPoll = _context.Polls.FirstOrDefault(x => x.Id == id);
+
+                _context.Polls.Remove(dbPoll);
+
+                _context.SaveChanges();
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                throw ex;
             }
         }
     }
