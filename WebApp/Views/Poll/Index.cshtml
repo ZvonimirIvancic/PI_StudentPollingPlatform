@@ -5,28 +5,83 @@
 @{
     ViewData["Title"] = "Index";
     string searchText = HttpContextAccessor.HttpContext.Request.Cookies["SearchText"];
-    var SongsItems = Model;
     var page = (int?)ViewData["page"];
     var pages = (int?)ViewData["pages"];
 }
 
 <h1>Polls</h1>
 <a asp-action="Create" class="btn btn-primary mb-3 mt-3">Create new Poll</a>
-<form method="get">
-    <input class="w-25" id="searchValue" type="search" name="searchText" placeholder="Search by Poll Title" value="@searchText" />
-    <button type="submit" class="btn btn-primary">Search</button>
+
+<!-- Filter Form -->
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-3">
+            <label for="searchValue">Search:</label>
+            <input id="searchValue" type="search" name="searchText" class="form-control" placeholder="Search by Poll Title" value="@searchText" />
+        </div>
+        <div class="col-md-3">
+            <label for="godinaFilter">Filter by Godina:</label>
+            @Html.DropDownList("godinaFilter", (IEnumerable<SelectListItem>)ViewBag.Godine, "All Years", new { @class = "form-control", id = "godinaFilter" })
+        </div>
+        <div class="col-md-3">
+            <label for="studijFilter">Filter by Studij:</label>
+            @Html.DropDownList("studijFilter", (IEnumerable<SelectListItem>)ViewBag.Studiji, "All Studij", new { @class = "form-control", id = "studijFilter" })
+        </div>
+        <div class="col-md-3">
+            <label for="kolegijFilter">Filter by Kolegij:</label>
+            @Html.DropDownList("kolegijFilter", (IEnumerable<SelectListItem>)ViewBag.Kolegiji, "All Kolegij", new { @class = "form-control", id = "kolegijFilter" })
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">Search/Apply Filters</button>
+        </div>
+    </div>
 </form>
 
-<br />
-
-<div class="row" id="songs-cards-row">
-    <partial name="_PollsCardsPartial" />
+<!-- Sorting Options -->
+<div class="mt-3">
+    <span>Sort by: </span>
+    <a asp-action="Index" asp-route-sortOrder="@ViewData["DateSortParm"]" class="btn btn-secondary">Date</a>
 </div>
 
+<!-- Poll Cards -->
+<div class="row" id="poll-cards-row">
+    @foreach (var poll in Model)
+    {
+        <div class="col-md-3">
+            <div class="card mb-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@poll.Title</h5>
+                    <p class="card-text">@poll.Tekst</p>
+                    <p class="card-text">
+                        <small class="text-muted">Date: @poll.PollDate?.ToString("yyyy-MM-dd")</small>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">Kolegij: @(poll.Kolegij?.KolegijName ?? "None")</small>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">Studij: @(poll.Studij?.StudijName ?? "None")</small>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">Godina: @(poll.Godina?.BrojGodine?.ToString() ?? "None")</small>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a asp-action="Index" asp-route-id="@poll.Id" asp-controller="Question" class="btn btn-primary">Questions</a>
+                    <a asp-action="Edit" asp-route-id="@poll.Id" class="btn btn-secondary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@poll.Id" class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    }
+    
+
+</div>
+
+<!-- Pagination -->
 <div class="btn-group mt-2">
-    <div class="mt-2 mb-2">
-        Page size: 4 ->
-    </div>
+    <div class="mt-2 mb-2">Page size: 4 -></div>
     @for (var i = 1; i <= pages + 1; i++)
     {
         var currClass = page == i ? "btn-primary" : "btn-outline-primary";
@@ -45,8 +100,6 @@
 
             var page = $(this).data("page");
 
-            var searchTextValue = document.getElementById("searchValue").value == null;
-
             var ajaxData = {
                 page: page,
                 searchText: document.getElementById("searchValue").value
@@ -57,7 +110,7 @@
                 url: "/Poll/Index",
                 data: ajaxData,
                 success: function (data) {
-                    $("#songs-cards-row").html(data);
+                    $("#poll-cards-row").html(data);
 
                     $(".pager-btn").removeClass("btn-primary");
                     $(".pager-btn").addClass("btn-outline-primary");
