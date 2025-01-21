@@ -80,16 +80,12 @@ namespace WebAPI.Controllers
                     return BadRequest($"Username {trimmedUsername} already exists");
 
 
-                var b64salt = PasswordHashProvider.GetSalt();
-                var b64hash = PasswordHashProvider.GetHash(registerDto.Password, b64salt);
-
 
                 var user = new User
                 {
                     Id = registerDto.Id,
                     Username = registerDto.Username,
-                    PwdHash = b64hash,
-                    PwdSalt = b64salt,
+                    Password = registerDto.Password,
                     FirstName = registerDto.FirstName,
                     LastName = registerDto.LastName,
                     Email = registerDto.Email,
@@ -125,10 +121,6 @@ namespace WebAPI.Controllers
                 if (existingUser == null)
                     return Unauthorized(genericLoginFail);
 
-
-                var b64hash = PasswordHashProvider.GetHash(loginDto.Password, existingUser.PwdSalt);
-                if (b64hash != existingUser.PwdHash)
-                    return Unauthorized(genericLoginFail);
 
                 var secureKey = _configuration["JWT:SecureKey"];
                 var serializedToken = JwtTokenProvider.CreateToken(secureKey, 60, loginDto.Username, "User");
